@@ -82,3 +82,25 @@ export const logout = async (req: Request, res: Response) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const myProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+    return res.json({ user });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+

@@ -4,6 +4,7 @@ import { createTaskSchema } from "../types/task.types.js";
 import { updateTaskSchema } from "../types/task.types.js";
 import { TaskService } from "../services/task.service.js";
 import { Status } from "../../generated/prisma/enums.js";
+import { io } from "../index.js";
 
 const taskService = new TaskService();
 
@@ -157,12 +158,10 @@ export const updateTask = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    // 🔒 Authorization rule
     if (task.creatorId !== userId && task.assignedToId !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    // 🔒 If assignedToId updated, ensure user exists
     if (parsed.data.assignedToId) {
       const userExists = await prisma.user.findUnique({
         where: { id: parsed.data.assignedToId },
@@ -197,6 +196,28 @@ export const updateTask = async (req: Request, res: Response) => {
       where: { id: taskId },
       data: updateData,
     });
+
+    io.emit("task-updated", {
+      taskId: updatedTask.id,
+      status: updatedTask.status,
+      priority: updatedTask.priority,
+      assignedToId: updatedTask.assignedToId,
+    });
+
+    if (
+      parsed.data.assignedToId &&
+      parsed.data.assignedToId !== task.assignedToId
+    ) {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: parsed.data.assignedToId,
+          message: `You have been assigned a new task: "${updatedTask.title}"`,
+        },
+      });
+
+      // emit only to assigned user
+      io.to(parsed.data.assignedToId).emit("task-assigned", notification);
+    }
 
     return res.status(200).json({
       message: "Task updated successfully",
