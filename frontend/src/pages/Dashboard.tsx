@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getTasks } from "../api/task.api";
 import { useAuth } from "../hooks/useAuth";
 import { connectSocket, disconnectSocket } from "../socket";
-import Navbar from "../components/Navbar";
 
 const Dashboard = () => {
   const [filters, setFilters] = useState({
@@ -53,8 +52,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <Navbar />
-
       <main className="p-6 max-w-5xl mx-auto">
         <TaskFilters
           status={filters.status}

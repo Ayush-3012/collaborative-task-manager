@@ -1,17 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { logout } from "../api/auth.api";
-import { useAuth } from "../hooks/useAuth";
 
-const Navbar = () => {
-  const { isAuthenticated } = useAuth();
-
+const Navbar = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
   const handleLogout = async () => {
     await logout();
   };
 
   return (
     <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-      <h1 className="text-xl font-semibold">Task Dashboard</h1>
+      <Link to="/" className="text-xl font-semibold">
+        Task Dashboard
+      </Link>
 
       <nav className="flex gap-3">
         {!isAuthenticated && (
@@ -42,7 +41,10 @@ const Navbar = () => {
             </Link>
 
             <button
-              onClick={handleLogout}
+              onClick={() => {
+                handleLogout();
+                <Navigate to="/" replace />;
+              }}
               className="bg-red-500 text-white px-3 py-1 rounded text-sm cursor-pointer"
             >
               Logout

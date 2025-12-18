@@ -1,40 +1,40 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "./login.schema";
-
-import type { LoginInput } from "./login.schema";
-import { login } from "../api/auth.api";
-import { useState } from "react";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-import { useAuth } from "../hooks/useAuth";
+import { registerSchema } from "./register.schema";
+import type { RegisterInput } from "./register.schema";
+import { register as registerUser } from "../api/auth.api";
 import { Navigate, useNavigate } from "react-router-dom";
-import Loader from "../components/Loader";
+import { useState } from "react";
+import { FiEye, FiEyeOff, FiUser, FiMail } from "react-icons/fi";
+import { useAuth } from "../hooks/useAuth";
 
-const Login = () => {
+const Register = () => {
+  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return null; // ya <Loader />
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: LoginInput) => {
+  const onSubmit = async (data: RegisterInput) => {
     try {
       setError("");
-      await login(data);
-      navigate("/", { replace: true });
-    } catch {
-      setError("Invalid email or password");
+      await registerUser(data);
+      navigate("/login");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Registration failed");
     }
   };
 
@@ -45,16 +45,34 @@ const Login = () => {
         className="bg-white w-full max-w-sm rounded-xl shadow-lg p-6 space-y-5"
       >
         <h2 className="text-2xl font-semibold text-center text-slate-800">
-          Welcome Back
+          Create Account
         </h2>
+
+        {/* Name */}
+        <div>
+          <div className="relative">
+            <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              {...register("name")}
+              placeholder="Full Name"
+              className="w-full border rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {errors.name && (
+            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+          )}
+        </div>
 
         {/* Email */}
         <div>
-          <input
-            {...register("email")}
-            placeholder="Email"
-            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="relative">
+            <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              {...register("email")}
+              placeholder="Email"
+              className="w-full border rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
           )}
@@ -67,7 +85,7 @@ const Login = () => {
               {...register("password")}
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full border rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-lg pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="button"
@@ -77,7 +95,6 @@ const Login = () => {
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
-
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
               {errors.password.message}
@@ -94,11 +111,11 @@ const Login = () => {
           disabled={isSubmitting}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 rounded-lg transition"
         >
-          {isSubmitting ? "Logging in..." : "Login"}
+          {isSubmitting ? "Creating account..." : "Register"}
         </button>
       </form>
     </div>
   );
 };
 
-export default Login;
+export default Register;

@@ -2,23 +2,31 @@ import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import CreateTask from "./pages/CreateTask";
-import { useAuth } from "./hooks/useAuth";
-import Register from "./pages/Registe";
+import Register from "./pages/Register";
 import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import { useAuth } from "./hooks/useAuth";
+import Loader from "./components/Loader";
 
 function App() {
-  const { isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <Loader />;
 
   return (
     <>
-      <Navbar />
+      <Navbar isAuthenticated={isAuthenticated} />
+
       <Routes>
-        <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/create" element={<CreateTask />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/" element={isAuthenticated ? <Dashboard /> : <Home />} />
+
+        <Route
+          path="/create"
+          element={isAuthenticated ? <CreateTask /> : <Login />}
+        />
       </Routes>
     </>
   );

@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { getUsers } from "../api/user.api";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "../components/Navbar";
 
 const CreateTask = () => {
   const navigate = useNavigate();
@@ -42,7 +41,6 @@ const CreateTask = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 p-6">
-      <Navbar />
       <div className="max-w-xl mx-auto bg-white p-6 rounded shadow">
         <h2 className="text-xl font-semibold mb-4">Create Task</h2>
 
