@@ -16,7 +16,7 @@ export const verifyAuthToken = (
   next: NextFunction
 ) => {
   try {
-    const token = req.signedCookies[process.env.COOKIE_NAME as string];
+    const token = req.cookies[process.env.COOKIE_NAME as string];
     if (!token?.trim())
       return res.status(401).json({ message: "Token Not Received" });
 

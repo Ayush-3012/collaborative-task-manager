@@ -54,10 +54,10 @@ export const login = async (req: Request, res: Response) => {
     const token = generateAuthToken(user.id);
     res.cookie(process.env.COOKIE_NAME as string, token, {
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
       path: "/",
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({
       message: "User Login Successful",
@@ -77,9 +77,9 @@ export const logout = async (req: Request, res: Response) => {
   try {
     res.clearCookie(process.env.COOKIE_NAME as string, {
       httpOnly: true,
+      secure: true,
+      sameSite: "none",
       path: "/",
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
 
     return res.json({ message: "User Logged out successfully" });
