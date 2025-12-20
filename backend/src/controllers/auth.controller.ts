@@ -55,7 +55,6 @@ export const login = async (req: Request, res: Response) => {
     res.cookie(process.env.COOKIE_NAME as string, token, {
       httpOnly: true,
       path: "/",
-      domain: "localhost",
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
@@ -78,7 +77,6 @@ export const logout = async (req: Request, res: Response) => {
   try {
     res.clearCookie(process.env.COOKIE_NAME as string, {
       httpOnly: true,
-      signed: true,
       path: "/",
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
