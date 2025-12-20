@@ -14,6 +14,8 @@ app.use(urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
+app.get("/", (req, res) => res.json("Welcome to Backend"));
+
 import authRouter from "./routes/auth.route.js";
 import taskRouter from "./routes/task.route.js";
 import notificationRouter from "./routes/notification.route.js";
