@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://collaborative-task-manager-pi.vercel.app/",
+  "https://collaborative-task-manager-pi.vercel.app",
 ];
 
 app.use(
