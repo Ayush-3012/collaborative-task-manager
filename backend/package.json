@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch -r dotenv/config src/index.ts",
+    "build": "npm run build",
+    "start": "npm start",
     "test": "jest"
   },
   "keywords": [],
