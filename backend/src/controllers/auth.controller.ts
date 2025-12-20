@@ -57,8 +57,8 @@ export const login = async (req: Request, res: Response) => {
       path: "/",
       domain: "localhost",
       secure: process.env.NODE_ENV === "production",
-      signed: true,
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 168 * 60 * 60 * 1000, // 7 days in milliseconds
     });
     return res.status(200).json({
       message: "User Login Successful",
@@ -80,6 +80,8 @@ export const logout = async (req: Request, res: Response) => {
       httpOnly: true,
       signed: true,
       path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
 
     return res.json({ message: "User Logged out successfully" });
