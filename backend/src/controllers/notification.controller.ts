@@ -4,9 +4,7 @@ import { prisma } from "../db/prisma.js";
 export const getNotifications = async (req: Request, res: Response) => {
   try {
     const userId = req.userId;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const notifications = await prisma.notification.findMany({
       where: { userId },

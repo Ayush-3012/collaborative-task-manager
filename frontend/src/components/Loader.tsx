@@ -1,24 +1,35 @@
 import { useEffect } from "react";
 import { ring } from "ldrs";
 
-const Loader = ({ fullScreen = true }) => {
+type LoaderProps = {
+  fullScreen?: boolean;
+  label?: string;
+};
+
+const Loader = ({ fullScreen = true, label }: LoaderProps) => {
   useEffect(() => {
     ring.register();
   }, []);
 
   return (
     <div
-      className={`flex items-center justify-center ${
+      className={`flex flex-col items-center justify-center gap-3 ${
         fullScreen ? "min-h-screen" : "h-full"
       }`}
     >
       <l-ring
-        size="40"
-        stroke="5"
+        size="42"
+        stroke="4"
         bg-opacity="0"
-        speed="2"
-        color="#2563eb"
-      ></l-ring>
+        speed="1.8"
+        color="#4f46e5" // indigo-600
+      />
+
+      {label && (
+        <p className="text-sm text-slate-500 animate-pulse">
+          {label}
+        </p>
+      )}
     </div>
   );
 };

@@ -56,11 +56,18 @@ export const login = async (req: Request, res: Response) => {
       httpOnly: true,
       path: "/",
       domain: "localhost",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       signed: true,
       sameSite: "lax",
     });
-    return res.status(200).json({ message: "User Login Successfull" });
+    return res.status(200).json({
+      message: "User Login Successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error: any) {
     console.log(error);
     return res.status(500).json({ message: error.message });
@@ -71,8 +78,6 @@ export const logout = async (req: Request, res: Response) => {
   try {
     res.clearCookie(process.env.COOKIE_NAME as string, {
       httpOnly: true,
-      domain: "localhost",
-      secure: true,
       signed: true,
       path: "/",
     });
@@ -104,3 +109,22 @@ export const myProfile = async (req: Request, res: Response) => {
   }
 };
 
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.body;
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        name,
+      },
+    });
+    return res.json({ user });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+};

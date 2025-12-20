@@ -29,8 +29,6 @@ export const verifyAuthToken = (
     next();
   } catch (error: any) {
     console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Authentication failed, try again." });
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

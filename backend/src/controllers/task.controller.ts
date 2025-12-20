@@ -23,6 +23,19 @@ export const createTask = async (req: Request, res: Response) => {
 
     const task = await taskService.createTask(parsed.data, creatorId);
 
+    if (task.assignedToId && task.assignedToId !== creatorId) {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: task.assignedToId,
+          taskId: task.id,
+          type: "TASK_ASSIGNED",
+          message: `You have been assigned a new task: "${task.title}"`,
+        },
+      });
+
+      io.to(task.assignedToId).emit("task-assigned", notification);
+    }
+
     return res.status(201).json({
       message: "Task created successfully",
       task,
@@ -138,7 +151,6 @@ export const updateTask = async (req: Request, res: Response) => {
     const taskId = req.params.id;
 
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
     if (!taskId)
       return res.status(400).json({ message: "Task id is required" });
 
@@ -150,6 +162,7 @@ export const updateTask = async (req: Request, res: Response) => {
       });
     }
 
+    // 🔹 fetch existing task
     const task = await prisma.task.findUnique({
       where: { id: taskId },
     });
@@ -158,10 +171,12 @@ export const updateTask = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    // 🔒 auth check
     if (task.creatorId !== userId && task.assignedToId !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    // 🔹 validate assigned user
     if (parsed.data.assignedToId) {
       const userExists = await prisma.user.findUnique({
         where: { id: parsed.data.assignedToId },
@@ -173,6 +188,7 @@ export const updateTask = async (req: Request, res: Response) => {
       }
     }
 
+    // 🔹 build update object
     const updateData: any = {};
 
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
@@ -192,11 +208,13 @@ export const updateTask = async (req: Request, res: Response) => {
     if (parsed.data.dueDate !== undefined)
       updateData.dueDate = new Date(parsed.data.dueDate);
 
+    // 🔹 update task
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: updateData,
     });
 
+    // 🔁 realtime task update
     io.emit("task-updated", {
       taskId: updatedTask.id,
       status: updatedTask.status,
@@ -206,16 +224,18 @@ export const updateTask = async (req: Request, res: Response) => {
 
     if (
       parsed.data.assignedToId &&
-      parsed.data.assignedToId !== task.assignedToId
+      parsed.data.assignedToId !== task.assignedToId &&
+      parsed.data.assignedToId !== task.creatorId
     ) {
       const notification = await prisma.notification.create({
         data: {
           userId: parsed.data.assignedToId,
+          taskId: updatedTask.id,
+          type: "TASK_ASSIGNED",
           message: `You have been assigned a new task: "${updatedTask.title}"`,
         },
       });
 
-      // emit only to assigned user
       io.to(parsed.data.assignedToId).emit("task-assigned", notification);
     }
 
@@ -226,5 +246,61 @@ export const updateTask = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Failed to update task" });
+  }
+};
+
+export const getTaskById = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+    const taskId = req.params.id;
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!taskId)
+      return res.status(401).json({ message: "Task Id is required" });
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    if (task.creatorId !== userId && task.assignedToId !== userId)
+      return res.status(403).json({ message: "Forbidden" });
+
+    return res.status(200).json({ task });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to fetch task" });
+  }
+};
+
+export const deleteTask = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+    const taskId = req.params.id;
+
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!taskId)
+      return res.status(400).json({ message: "Task id is required" });
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    if (task.creatorId !== userId)
+      return res.status(403).json({ message: "Only creator can delete task" });
+
+    await prisma.task.delete({
+      where: { id: taskId },
+    });
+
+    io.emit("task-deleted", { taskId });
+
+    return res.status(200).json({ message: "Task deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to delete task" });
   }
 };

@@ -23,3 +23,8 @@ export const getMe = async () => {
   const res = await api.get("/auth/me");
   return res.data;
 };
+
+export const updateProfile = async (data: { name: string }) => {
+  const res = await api.put("/auth/update", data);
+  return res.data;
+};

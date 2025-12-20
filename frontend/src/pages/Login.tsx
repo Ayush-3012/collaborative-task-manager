@@ -1,24 +1,19 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "./login.schema";
-
 import type { LoginInput } from "./login.schema";
-import { login } from "../api/auth.api";
 import { useState } from "react";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-import { useAuth } from "../hooks/useAuth";
+import { FiEye, FiEyeOff, FiMail, FiLock } from "react-icons/fi";
 import { Navigate, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import Loader from "../components/Loader";
+import { useAuth } from "../hooks/useAuth";
 
 const Login = () => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { login, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return <Loader />;
-
-  if (isAuthenticated) return <Navigate to="/" replace />;
 
   const {
     register,
@@ -28,33 +23,54 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  if (isLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader />
+      </div>
+    );
+
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+
   const onSubmit = async (data: LoginInput) => {
     try {
       setError("");
       await login(data);
-      navigate("/", { replace: true });
+      navigate("/dashboard");
     } catch {
       setError("Invalid email or password");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
-      <form
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 px-4">
+      <motion.form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white w-full max-w-sm rounded-xl shadow-lg p-6 space-y-5"
+        initial={{ opacity: 0, y: 25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="bg-white w-full max-w-sm rounded-xl border border-slate-200 shadow-lg p-6 sm:p-8 space-y-6"
       >
-        <h2 className="text-2xl font-semibold text-center text-slate-800">
-          Welcome Back
-        </h2>
+        {/* Header */}
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-semibold text-slate-800">
+            Welcome back
+          </h2>
+          <p className="text-sm text-slate-500">
+            Sign in to continue to TaskManager
+          </p>
+        </div>
 
         {/* Email */}
         <div>
-          <input
-            {...register("email")}
-            placeholder="Email"
-            className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="relative">
+            <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              {...register("email")}
+              placeholder="Email address"
+              className="w-full border border-slate-300 rounded-lg pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+            />
+          </div>
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
           )}
@@ -63,21 +79,21 @@ const Login = () => {
         {/* Password */}
         <div>
           <div className="relative">
+            <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               {...register("password")}
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full border rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded-lg pl-10 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
             />
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
-
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">
               {errors.password.message}
@@ -92,11 +108,11 @@ const Login = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 rounded-lg transition"
+          className="w-full bg-indigo-600 cursor-pointer hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2.5 rounded-lg font-medium transition"
         >
           {isSubmitting ? "Logging in..." : "Login"}
         </button>
-      </form>
+      </motion.form>
     </div>
   );
 };
