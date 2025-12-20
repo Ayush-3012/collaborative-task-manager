@@ -10,6 +10,8 @@ export const setupSocket = (server: HttpServer) => {
   const io = new Server(server, {
     cors: {
       origin: ["http://localhost:5173", "https://collaborative-task-manager-pi.vercel.app/"],
+      methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     },
   });

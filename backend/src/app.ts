@@ -3,12 +3,20 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://hire-me-ayush-3012.vercel.app",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://collaborative-task-manager-pi.vercel.app/",
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
