@@ -3,7 +3,7 @@ import { prisma } from "../db/prisma.js";
 import { createTaskSchema } from "../types/task.types.js";
 import { updateTaskSchema } from "../types/task.types.js";
 import { TaskService } from "../services/task.service.js";
-import { Status } from "../../generated/prisma/enums.js";
+import { Status } from "../generated/prisma/enums.js";
 import { io } from "../index.js";
 
 const taskService = new TaskService();
