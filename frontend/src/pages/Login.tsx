@@ -8,6 +8,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Loader from "../components/Loader";
 import { useAuth } from "../hooks/useAuth";
+import { reconnectSocket } from "../socket";
 
 const Login = () => {
   const [error, setError] = useState("");
@@ -36,6 +37,7 @@ const Login = () => {
     try {
       setError("");
       await login(data);
+      reconnectSocket();
       navigate("/dashboard");
     } catch {
       setError("Invalid email or password");

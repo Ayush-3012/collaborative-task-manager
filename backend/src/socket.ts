@@ -1,10 +1,7 @@
 import { Server } from "socket.io";
 import type { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
-
-interface SocketUserPayload {
-  userId: string;
-}
+import cookie from "cookie";
 
 export const setupSocket = (server: HttpServer) => {
   const io = new Server(server, {
@@ -21,15 +18,14 @@ export const setupSocket = (server: HttpServer) => {
 
   io.use((socket, next) => {
     try {
-      const token = socket.handshake.auth?.token;
-      if (!token) {
-        return next(new Error("Authentication error"));
-      }
+      const cookies = cookie.parse(socket.handshake.headers.cookie || "");
 
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string
-      ) as SocketUserPayload;
+      const token = cookies[process.env.COOKIE_NAME as string];
+      if (!token) return next(new Error("Auth error"));
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+        userId: string;
+      };
 
       socket.data.userId = decoded.userId;
       next();
@@ -40,11 +36,8 @@ export const setupSocket = (server: HttpServer) => {
 
   io.on("connection", (socket) => {
     const userId = socket.data.userId;
-
     console.log(`🟢 Socket connected: ${userId}`);
-
     socket.join(userId);
-
     socket.on("disconnect", () => {
       console.log(`🔴 Socket disconnected: ${userId}`);
     });

@@ -162,21 +162,15 @@ export const updateTask = async (req: Request, res: Response) => {
       });
     }
 
-    // 🔹 fetch existing task
     const task = await prisma.task.findUnique({
       where: { id: taskId },
     });
 
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" });
-    }
+    if (!task) return res.status(404).json({ message: "Task not found" });
 
-    // 🔒 auth check
-    if (task.creatorId !== userId && task.assignedToId !== userId) {
+    if (task.creatorId !== userId && task.assignedToId !== userId)
       return res.status(403).json({ message: "Forbidden" });
-    }
 
-    // 🔹 validate assigned user
     if (parsed.data.assignedToId) {
       const userExists = await prisma.user.findUnique({
         where: { id: parsed.data.assignedToId },
@@ -188,7 +182,6 @@ export const updateTask = async (req: Request, res: Response) => {
       }
     }
 
-    // 🔹 build update object
     const updateData: any = {};
 
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
@@ -208,13 +201,11 @@ export const updateTask = async (req: Request, res: Response) => {
     if (parsed.data.dueDate !== undefined)
       updateData.dueDate = new Date(parsed.data.dueDate);
 
-    // 🔹 update task
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: updateData,
     });
 
-    // 🔁 realtime task update
     io.emit("task-updated", {
       taskId: updatedTask.id,
       status: updatedTask.status,
@@ -224,7 +215,6 @@ export const updateTask = async (req: Request, res: Response) => {
 
     if (
       parsed.data.assignedToId &&
-      parsed.data.assignedToId !== task.assignedToId &&
       parsed.data.assignedToId !== task.creatorId
     ) {
       const notification = await prisma.notification.create({
@@ -291,6 +281,10 @@ export const deleteTask = async (req: Request, res: Response) => {
 
     if (task.creatorId !== userId)
       return res.status(403).json({ message: "Only creator can delete task" });
+
+    await prisma.notification.deleteMany({
+      where: { taskId },
+    });
 
     await prisma.task.delete({
       where: { id: taskId },

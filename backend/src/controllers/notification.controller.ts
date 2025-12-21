@@ -39,7 +39,6 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    // 🔒 ownership check
     if (notification.userId !== userId) {
       return res.status(403).json({ message: "Forbidden" });
     }

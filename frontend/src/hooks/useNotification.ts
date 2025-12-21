@@ -3,15 +3,22 @@ import {
   fetchNotifications,
   markNotificationAsRead,
   type Notification,
-} from "../api/notification.api"
+} from "../api/notification.api";
 import { connectSocket } from "../socket";
+import { useAuth } from "./useAuth";
+import { useSnackbar } from "notistack";
 
 export const useNotification = () => {
+  const { user, isAuthenticated } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    if (!isAuthenticated) return;
+
+    const fetchAllNotification = async () => {
       try {
         const data = await fetchNotifications();
         setNotifications(data);
@@ -22,25 +29,32 @@ export const useNotification = () => {
       }
     };
 
-    load();
-  }, []);
+    fetchAllNotification();
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
     const socket = connectSocket();
 
-    socket.on("task-assigned", (notification: Notification) => {
+    const handleTaskAssigned = (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]);
-    });
+
+      enqueueSnackbar(notification.message, {
+        variant: "info",
+      });
+    };
+
+    socket.on("task-assigned", handleTaskAssigned);
 
     return () => {
-      socket.off("task-assigned");
+      socket.off("task-assigned", handleTaskAssigned);
     };
-  }, []);
+  }, [isAuthenticated, user?.id, enqueueSnackbar]);
 
   const markAsRead = async (id: string) => {
     try {
       const updated = await markNotificationAsRead(id);
-
       setNotifications((prev) =>
         prev.map((n) => (n.id === updated.id ? updated : n))
       );
@@ -49,7 +63,7 @@ export const useNotification = () => {
     }
   };
 
-  const unreadCount = notifications?.filter((n) => !n.read)?.length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return {
     notifications,
